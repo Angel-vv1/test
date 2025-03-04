@@ -1,39 +1,65 @@
-package com.example.crawler;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import java.util.concurrent.TimeUnit;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+public class ZhiwangCrawler {
+    private static WebDriver driver;
+    private static WebDriverWait wait;
 
-public class Crawler {
-    private RedisUtils redisUtils;
-    private ProxyPool proxyPool;
-
-    public Crawler() {
-        this.redisUtils = new RedisUtils();
-        this.proxyPool = new ProxyPool();
+    public static void main(String[] args) {
+        // 设置 ChromeDriver 路径，根据实际情况修改
+        System.setProperty("webdriver.chrome.driver", "D:\\Python\\chromedriver.exe");
+        driver = new ChromeDriver();
+        wait = new WebDriverWait(driver, 10);
+        try {
+            String keyword = "Python";
+            searcher(keyword);
+            // 先点击一次下一页按钮，跳过已经加载好的第一页
+            WebElement firstNext = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#Page_next_top")));
+            firstNext.click();
+            for (int i = 0; i < 6; i++) {
+                WebElement paresNext = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#Page_next_top")));
+                paresNext.click();
+                String html = driver.getPageSource();
+                PageParser.parsePage(html);
+                TimeUnit.SECONDS.sleep(2);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (driver != null) {
+                driver.close();
+            }
+            RedisUtils.close();
+        }
     }
 
-    public void startCrawling() {
-        while (true) {
-            String url = redisUtils.getFromQueue();
-            if (url == null) {
-                break;
-            }
-            if (redisUtils.isCrawled(url)) {
-                continue;
-            }
-            try {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
-                headers.put("Referer", "https://www.taobao.com");
-                String html = HttpUtils.sendRequest(url, headers);
-                List<String> productInfoList = PageParser.parseProductInfo(html);
-                DataSender.sendData(productInfoList);
-                redisUtils.markAsCrawled(url);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    public static void searcher(String keyword) {
+        driver.get("https://www.cnki.net/");
+        driver.manage().window().maximize();
+        try {
+            TimeUnit.SECONDS.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        WebElement input = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("txt_SearchText")));
+        input.sendKeys(keyword);
+        WebElement searchButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.className("search-btn")));
+        searchButton.click();
+
+        try {
+            TimeUnit.SECONDS.sleep(3);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        WebElement sortIcon = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("[class=\"icon icon-sort\"]")));
+        sortIcon.click();
+        WebElement pageCount = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector(".page-show-count ul li"))).get(0);
+        pageCount.click();
+        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector(".result-table-list tbody tr")));
     }
 }
