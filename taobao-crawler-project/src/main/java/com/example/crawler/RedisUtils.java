@@ -3,8 +3,16 @@ package com.example.crawler;
 import redis.clients.jedis.Jedis;
 
 public class RedisUtils {
-    private Jedis jedis = new Jedis("localhost", 6379);
+    private Jedis jedis = new Jedis("hadoop01", 6379);
 
+    public static void addZhizhongSeedUrl(String url) {
+        jedis.sadd("zhizhong_seed_urls", url);
+    }
+
+    public static java.util.Set<String> getZhizhongSeedUrls() {
+        return jedis.smembers("zhizhong_seed_urls");
+    }
+    
     public void addToQueue(String url) {
         jedis.rpush("url_queue", url);
     }
