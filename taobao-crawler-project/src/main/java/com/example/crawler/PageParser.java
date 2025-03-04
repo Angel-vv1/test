@@ -1,25 +1,26 @@
-package com.example.crawler;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class PageParser {
-    public static List<String> parseProductInfo(String html) {
-        List<String> productInfoList = new ArrayList<>();
-        Document doc = Jsoup.parse(html);
-        // 根据淘宝实际页面结构调整选择器
-        Elements items = doc.select(".item.J_MouserOnverReq");
+    public static void parsePage(String html) {
+        Document soup = Jsoup.parse(html);
+        Elements items = soup.select(".result-table-list tbody tr");
         for (Element item : items) {
-            String title = item.select(".row.row-2.title").text();
-            String price = item.select(".price.g_price.g_price-highlight").text();
-            String info = "Title: " + title + ", Price: " + price;
-            productInfoList.add(info);
+            Elements detail = item.select("td");
+            if (detail.size() >= 6) {
+                String id = detail.get(0).text().trim();
+                String name = detail.get(1).text().trim();
+                String author = detail.get(2).text().trim();
+                String resource = detail.get(3).text().trim();
+                String time = detail.get(4).text().trim();
+                String data = detail.get(5).text().trim();
+                String paper = "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"author\":\"" + author + "\",\"resource\":\"" + resource + "\",\"time\":\"" + time + "\",\"data\":\"" + data + "\"}";
+                // 将数据保存到Redis
+                RedisUtils.addPaper(paper);
+                System.out.println(paper);
+            }
         }
-        return productInfoList;
     }
 }
