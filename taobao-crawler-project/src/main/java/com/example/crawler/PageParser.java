@@ -1,14 +1,25 @@
-package com.example.taobaocrawlerproject;
+package com.example.crawler;
 
-import javafx.fxml.FXML;
-import javafx.scene.control.Label;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
-public class HelloController {
-    @FXML
-    private Label welcomeText;
+import java.util.ArrayList;
+import java.util.List;
 
-    @FXML
-    protected void onHelloButtonClick() {
-        welcomeText.setText("Welcome to JavaFX Application!");
+public class PageParser {
+    public static List<String> parseProductInfo(String html) {
+        List<String> productInfoList = new ArrayList<>();
+        Document doc = Jsoup.parse(html);
+        // 根据淘宝实际页面结构调整选择器
+        Elements items = doc.select(".item.J_MouserOnverReq");
+        for (Element item : items) {
+            String title = item.select(".row.row-2.title").text();
+            String price = item.select(".price.g_price.g_price-highlight").text();
+            String info = "Title: " + title + ", Price: " + price;
+            productInfoList.add(info);
+        }
+        return productInfoList;
     }
 }
