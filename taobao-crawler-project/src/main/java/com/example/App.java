@@ -1,6 +1,6 @@
 package com.example;
 
-import com.example.crawler.Crawler;
+import com.example.crawler.ZhiwangCrawler;
 import com.example.flink.FlinkProcessor;
 
 import java.util.concurrent.ExecutorService;
