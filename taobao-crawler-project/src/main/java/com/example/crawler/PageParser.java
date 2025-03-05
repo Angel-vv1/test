@@ -1,3 +1,5 @@
+package com.example.crawler;
+
 import com.example.crawler.RedisUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
