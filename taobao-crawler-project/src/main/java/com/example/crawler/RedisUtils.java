@@ -1,3 +1,4 @@
+package com.example.crawler;
 import redis.clients.jedis.Jedis;
 
 public class RedisUtils {
